@@ -1,0 +1,15 @@
+services:
+  nederlapse:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - images:/app/images:z
+      - output:/app/output:z
+    environment:
+      - PORT=3000
+    restart: unless-stopped
+
+volumes:
+  images:
+  output:
