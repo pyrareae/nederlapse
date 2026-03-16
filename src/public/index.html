@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nederlapse - Utrecht Merwede Timelapse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #111;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      padding: 1.5rem 1rem 1rem;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    h1 span { color: #e74c3c; }
+    .subtitle {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+    .video-container {
+      width: 100%;
+      max-width: 1280px;
+      padding: 0 1rem;
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+    }
+    video {
+      width: 100%;
+      border-radius: 6px;
+      background: #000;
+    }
+    .controls {
+      padding: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .controls button {
+      background: #222;
+      color: #eee;
+      border: 1px solid #333;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .controls button:hover { background: #333; }
+    .controls button.active { background: #e74c3c; border-color: #e74c3c; }
+    .status {
+      padding: 0.5rem 1rem 1.5rem;
+      color: #666;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+    .no-video {
+      color: #888;
+      padding: 4rem 1rem;
+      text-align: center;
+    }
+    .no-video code {
+      background: #222;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Neder<span>lapse</span></h1>
+    <div class="subtitle">Utrecht Merwede Construction Timelapse</div>
+  </header>
+
+  <div class="video-container">
+    <video id="player" autoplay loop muted playsinline>
+      <source src="/video" type="video/mp4">
+    </video>
+  </div>
+
+  <div class="controls">
+    <span style="color:#888; font-size:0.8rem">Speed:</span>
+    <button data-speed="0.25">0.25x</button>
+    <button data-speed="0.5">0.5x</button>
+    <button data-speed="1" class="active">1x</button>
+    <button data-speed="2">2x</button>
+    <button data-speed="4">4x</button>
+  </div>
+
+  <div class="status" id="status">Loading...</div>
+
+  <script>
+    const video = document.getElementById("player");
+    const statusEl = document.getElementById("status");
+
+    // Speed controls
+    document.querySelectorAll("[data-speed]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        video.playbackRate = parseFloat(btn.dataset.speed);
+        document.querySelectorAll("[data-speed]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    // Handle missing video
+    video.addEventListener("error", () => {
+      document.querySelector(".video-container").innerHTML =
+        '<div class="no-video">No video yet.<br><br>Run <code>npm run scrape</code> then <code>npm run compile</code> to generate the timelapse.</div>';
+    });
+
+    // Fetch status
+    async function updateStatus() {
+      try {
+        const res = await fetch("/status");
+        const data = await res.json();
+        const parts = [];
+        if (data.imageCount) parts.push(`${data.imageCount.toLocaleString()} frames`);
+        if (data.firstImage && data.lastImage) {
+          parts.push(`${data.firstImage.slice(0, 10)} to ${data.lastImage.slice(0, 10)}`);
+        }
+        if (data.videoModified) {
+          parts.push(`Video updated ${new Date(data.videoModified).toLocaleDateString()}`);
+        }
+        statusEl.textContent = parts.join("  \u00b7  ");
+      } catch {
+        statusEl.textContent = "";
+      }
+    }
+    updateStatus();
+  </script>
+</body>
+</html>
